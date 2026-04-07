@@ -1,0 +1,16 @@
+[build-system]
+requires = ["uv_build>=0.11.3,<0.12.0"]
+build-backend = "uv_build"
+
+[project]
+name = "scim2-fastapi"
+version = "0.0.0"
+description = "Painless SCIM integration for FastAPI"
+readme = "README.md"
+authors = [
+    { name = "Éloi Rivard", email = "eloi@yaal.coop" }
+]
+requires-python = ">=3.10"
+dependencies = [
+    "scim2-models>=0.6.9",
+]
