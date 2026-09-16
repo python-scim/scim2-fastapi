@@ -14,3 +14,16 @@ requires-python = ">=3.10"
 dependencies = [
     "scim2-models>=0.6.9",
 ]
+
+[project.urls]
+documentation = "https://scim2-fastapi.readthedocs.io"
+repository = "https://github.com/python-scim/scim2-fastapi"
+funding = "https://github.com/sponsors/python-scim"
+
+[dependency-groups]
+doc = [
+    "myst-parser>=3.0.1",
+    "shibuya>=2024.5.15",
+    "sphinx>=7.3.7",
+    "sphinx-issues>=5.0.0",
+]
