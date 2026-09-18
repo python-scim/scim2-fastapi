@@ -23,6 +23,7 @@ funding = "https://github.com/sponsors/python-scim"
 [dependency-groups]
 dev = [
     "prek>=0.1.0",
+    "pytest>=8.2.1",
 ]
 doc = [
     "myst-parser>=3.0.1",
@@ -30,3 +31,6 @@ doc = [
     "sphinx>=7.3.7",
     "sphinx-issues>=5.0.0",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
