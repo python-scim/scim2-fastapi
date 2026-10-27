@@ -66,6 +66,7 @@ def create_client(
 
 
 def test_successful_request_is_committed():
+    """A successful request commits the session."""
     client, sessions = create_client()
     response = client.post("/scim/v2/Users", json=USER)
 
@@ -74,6 +75,7 @@ def test_successful_request_is_committed():
 
 
 def test_scim_error_is_committed():
+    """A request that gets a SCIM error commits the session too."""
     client, sessions = create_client()
     response = client.get("/scim/v2/Users/unknown")
 
@@ -82,6 +84,7 @@ def test_scim_error_is_committed():
 
 
 def test_unexpected_exception_is_rolled_back():
+    """An unexpected exception rolls back the session, and gets a 500."""
     client, sessions = create_client(BrokenStorage)
     response = client.get("/scim/v2/Users")
 
@@ -90,6 +93,7 @@ def test_unexpected_exception_is_rolled_back():
 
 
 def test_failed_commit_answers_a_500():
+    """A failed commit gives a 500 instead of a success."""
     client, _ = create_client(fail_commit=True)
     response = client.get("/scim/v2/Users")
 

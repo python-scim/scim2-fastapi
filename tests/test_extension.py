@@ -60,11 +60,13 @@ def refuse() -> None:
 
 
 def test_requires_at_least_one_resource_type():
+    """A provider without resource types is refused."""
     with pytest.raises(ValueError, match="at least one resource type"):
         ScimServer(AsyncInMemoryStorage(), ScimProvider())
 
 
 def test_endpoints_are_served_under_the_url_prefix():
+    """The endpoints and the resource locations use the url_prefix, without its trailing slash."""
     client = create_client(url_prefix="/api/scim/")
 
     created = client.post("/api/scim/Users", json=USER, headers=SCIM_HEADERS)
@@ -76,6 +78,7 @@ def test_endpoints_are_served_under_the_url_prefix():
 
 
 def test_endpoints_can_be_served_at_the_application_root():
+    """An empty url_prefix serves the endpoints at the root of the application."""
     client = create_client(url_prefix="")
 
     created = client.post("/Users", json=USER, headers=SCIM_HEADERS)
@@ -86,6 +89,7 @@ def test_endpoints_can_be_served_at_the_application_root():
 
 
 def test_locations_follow_the_host_and_root_path():
+    """The resource locations use the host and the root path of the request."""
     app = FastAPI()
     ScimServer(AsyncInMemoryStorage(), create_provider(), app=app)
     client = TestClient(app, base_url="https://scim.example.org", root_path="/app")
@@ -119,6 +123,7 @@ def test_router_can_be_included_in_another_router():
 
 
 def test_several_instances_serve_one_application():
+    """Two instances with their own prefix and name keep separate resources."""
     app = FastAPI()
     ScimServer(
         AsyncInMemoryStorage(),
@@ -145,6 +150,7 @@ def test_several_instances_serve_one_application():
 
 
 def test_routes_are_named_after_the_scim_routes():
+    """The route names are the SCIM route names, prefixed with the name of the extension."""
     app = FastAPI()
     ScimServer(AsyncInMemoryStorage(), create_provider(), app=app)
 
@@ -158,6 +164,7 @@ def test_routes_are_named_after_the_scim_routes():
 
 
 def test_openapi_schema_lists_the_scim_routes():
+    """The OpenAPI schema lists the SCIM routes, but not the fallback route."""
     app = FastAPI()
     ScimServer(AsyncInMemoryStorage(), create_provider(), app=app)
 
@@ -167,6 +174,7 @@ def test_openapi_schema_lists_the_scim_routes():
 
 
 def test_unknown_path_answers_a_scim_404():
+    """A path that matches no SCIM route gets a SCIM 404 error."""
     response = create_client().get("/scim/v2/Users/42/unknown")
 
     assert response.status_code == 404
@@ -182,6 +190,7 @@ def test_unknown_path_answers_a_scim_404():
     ],
 )
 def test_unsupported_method_answers_a_scim_405(method, path, allowed):
+    """A method the endpoint does not support gets a SCIM 405 error with an Allow header."""
     response = create_client().request(method, path)
 
     assert response.status_code == 405
@@ -190,6 +199,7 @@ def test_unsupported_method_answers_a_scim_405(method, path, allowed):
 
 
 def test_responses_keep_the_status_headers_and_body_of_the_service():
+    """The responses keep the status, the headers and the body of the service, including an empty 204."""
     client = create_client(
         provider=create_provider(ServiceProviderConfig(etag=ETag(supported=True)))
     )
@@ -212,6 +222,7 @@ def test_responses_keep_the_status_headers_and_body_of_the_service():
 
 
 def test_query_string_is_passed_to_the_service():
+    """The query parameters, such as filter, reach the service."""
     config = ServiceProviderConfig(filter=Filter(supported=True, max_results=10))
     client = create_client(provider=create_provider(config))
     client.post("/scim/v2/Users", json=USER, headers=SCIM_HEADERS)
@@ -224,6 +235,7 @@ def test_query_string_is_passed_to_the_service():
 
 
 def test_bulk_body_beyond_max_payload_size_is_refused():
+    """A bulk body larger than maxPayloadSize gets a SCIM 413 error."""
     config = ServiceProviderConfig(
         bulk=Bulk(supported=True, max_operations=10, max_payload_size=100)
     )
@@ -237,6 +249,7 @@ def test_bulk_body_beyond_max_payload_size_is_refused():
 
 
 def test_unsupported_bulk_is_refused_whatever_its_max_payload_size():
+    """A bulk request gets a 501 when bulk is not supported, even with a body above maxPayloadSize."""
     config = ServiceProviderConfig(
         bulk=Bulk(supported=False, max_operations=0, max_payload_size=0)
     )
@@ -247,6 +260,7 @@ def test_unsupported_bulk_is_refused_whatever_its_max_payload_size():
 
 
 def test_max_payload_size_only_limits_bulk_requests():
+    """The maxPayloadSize limit does not apply to the other requests."""
     config = ServiceProviderConfig(
         bulk=Bulk(supported=True, max_operations=10, max_payload_size=10)
     )
@@ -281,6 +295,8 @@ def test_scim_exception_raised_by_a_dependency_answers_a_scim_error():
 
 
 def test_http_exception_raised_by_a_dependency_keeps_its_headers():
+    """An HTTPException from a dependency gets a SCIM error, and keeps its headers except Content-Type."""
+
     def refuse_with_http_exception() -> None:
         raise HTTPException(
             401,
@@ -298,6 +314,8 @@ def test_http_exception_raised_by_a_dependency_keeps_its_headers():
 
 
 def test_validation_error_raised_by_a_dependency_answers_a_scim_400():
+    """A header that a dependency requires and the request lacks gets a SCIM 400 invalidValue error."""
+
     def header_subject(x_user: Annotated[str, Header()]) -> str:
         return x_user
 
@@ -314,6 +332,8 @@ def test_validation_error_raised_by_a_dependency_answers_a_scim_400():
 
 
 def test_subject_is_passed_to_the_service():
+    """The subject from the dependency reaches the service, which serves /Me with it."""
+
     def header_subject(request: Request) -> str | None:
         return request.headers.get("X-User")
 
@@ -334,6 +354,7 @@ def test_subject_is_passed_to_the_service():
 
 
 def test_storage_can_be_given_by_a_dependency():
+    """A storage dependency gives each request its own storage, here one per tenant."""
     storages = {"a": AsyncInMemoryStorage(), "b": AsyncInMemoryStorage()}
 
     def tenant_storage(request: Request) -> AsyncInMemoryStorage:
@@ -354,6 +375,8 @@ def test_storage_can_be_given_by_a_dependency():
 
 
 def test_steps_of_the_service_can_be_overridden():
+    """A ScimService subclass passed as service changes the resource locations."""
+
     class PublicService(ScimService):
         def resource_location(self, base_url, resource_type, resource_id):
             return f"https://scim.example.org/v2/Users/{resource_id}"
@@ -398,11 +421,14 @@ def test_cursors_are_sealed_with_the_secret():
 
 
 def test_cursors_need_a_secret():
+    """Announcing cursor pagination without a secret raises a ValueError."""
     with pytest.raises(ValueError, match="secret"):
         create_cursor_client(AsyncInMemoryStorage(), None)
 
 
 def test_storage_without_the_announced_cursors_is_refused():
+    """A storage without cursor support is refused when the configuration announces cursors."""
+
     class CursorlessStorage(AsyncInMemoryStorage):
         supports_cursors = False
 
@@ -412,6 +438,7 @@ def test_storage_without_the_announced_cursors_is_refused():
 
 
 def test_given_service_keeps_its_own_secret():
+    """A given service keeps its own secret, so the secret parameter is not needed."""
     config = ServiceProviderConfig(pagination=Pagination(cursor=True, index=True))
     provider = create_provider(config)
     client = create_client(provider=provider, service=ScimService(provider, secret="s"))
@@ -421,6 +448,8 @@ def test_given_service_keeps_its_own_secret():
 
 
 def test_unexpected_exceptions_reach_fastapi():
+    """An unexpected exception does not become a SCIM error, and reaches FastAPI."""
+
     class BrokenStorage(AsyncInMemoryStorage):
         async def search(self, resource_types, search_request, *, position=None):
             raise RuntimeError("database is down")
