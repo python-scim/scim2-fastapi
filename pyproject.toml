@@ -34,10 +34,10 @@ dev = [
     "scim2-tester>=0.5.2",
 ]
 doc = [
-    "myst-parser>=5.1.0",
     "shibuya>=2026.7.12",
     "sphinx>=9.0.4",
     "sphinx-issues>=6.0.0",
+    "sphinx-paramlinks>=0.6.0",
 ]
 
 [tool.ruff.lint]
@@ -83,8 +83,9 @@ init_forbid_extra = true
 init_typed = true
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
 pythonpath = ["."]
+addopts = "--doctest-modules --doctest-glob='*.rst' --ignore=doc/conf.py"
+doctest_optionflags= "ALLOW_UNICODE ELLIPSIS"
 
 [tool.uv]
 exclude-newer = "14 days"

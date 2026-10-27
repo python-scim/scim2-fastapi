@@ -193,6 +193,7 @@ def test_responses_keep_the_status_headers_and_body_of_the_service():
 
     created = client.post("/scim/v2/Users", json=USER, headers=SCIM_HEADERS)
     assert created.status_code == 201
+    assert type(created.status_code) is int
     assert created.headers["Content-Type"] == SCIM_JSON
     assert created.headers["ETag"] == created.json()["meta"]["version"]
     location = created.headers["Location"]

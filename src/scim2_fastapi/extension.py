@@ -215,7 +215,7 @@ class ScimServer:
             json.dumps(scim_response.body) if scim_response.body is not None else None
         )
         return Response(
-            body, status_code=scim_response.status, headers=scim_response.headers
+            body, status_code=int(scim_response.status), headers=scim_response.headers
         )
 
     def _handle_scim_exception(self, exception: SCIMException) -> Response:
