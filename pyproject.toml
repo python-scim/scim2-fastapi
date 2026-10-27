@@ -49,6 +49,7 @@ dev = [
     "scim2-client>=0.13.2",
     "scim2-server[cursor]>=0.8.3",
     "scim2-tester>=0.5.2",
+    "tox-uv>=1.37.0",
 ]
 doc = [
     "shibuya>=2026.7.12",
@@ -107,3 +108,47 @@ doctest_optionflags= "ALLOW_UNICODE ELLIPSIS"
 [tool.uv]
 exclude-newer = "14 days"
 exclude-newer-package = { scim2-models = false, scim2-client = false, scim2-server = false, scim2-cli = false, scim2-tester = false, pytest-scim2-server = false }
+
+[tool.tox]
+requires = ["tox>=4.19"]
+env_list = [
+    "style",
+    "py311",
+    "py312",
+    "py313",
+    "py314",
+    "py315",
+    "minversions",
+    "doc",
+    "coverage",
+]
+
+[tool.tox.env_run_base]
+runner = "uv-venv-lock-runner"
+dependency_groups = ["dev"]
+commands = [
+    ["pytest", "--showlocals", "--full-trace", "{posargs}"],
+]
+
+[tool.tox.env.style]
+runner = "uv-venv-runner"
+commands = [
+    ["prek", "run", "--all-files", "--show-diff-on-failure"],
+]
+
+[tool.tox.env.minversions]
+runner = "uv-venv-runner"
+uv_resolution = "lowest-direct"
+package = "editable"
+
+[tool.tox.env.doc]
+dependency_groups = ["doc"]
+commands = [
+    ["sphinx-build", "-W", "--keep-going", "--builder", "html", "doc", "build/sphinx/html"],
+]
+
+[tool.tox.env.coverage]
+commands = [
+    ["pytest", "--cov", "--cov-fail-under=100", "--cov-report", "term:skip-covered", "{posargs}"],
+    ["coverage", "html"],
+]
