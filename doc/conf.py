@@ -1,12 +1,18 @@
 import datetime
 from importlib import metadata
 
+from docutils import nodes
+
 # -- General configuration ------------------------------------------------
 
 extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx.ext.doctest",
     "sphinx.ext.intersphinx",
+    "sphinx.ext.todo",
+    "sphinx.ext.viewcode",
     "sphinx_issues",
-    "myst_parser",
+    "sphinx_paramlinks",
 ]
 
 templates_path = ["_templates"]
@@ -15,22 +21,22 @@ project = "scim2-fastapi"
 year = datetime.datetime.now().strftime("%Y")
 copyright = f"{year}, Yaal Coop"
 author = "Yaal Coop"
-source_suffix = {
-    ".rst": "restructuredtext",
-    ".md": "markdown",
-}
-
+source_suffix = {".rst": "restructuredtext"}
 version = metadata.version("scim2-fastapi")
 language = "en"
 pygments_style = "sphinx"
 toctree_collapse = False
+todo_include_todos = False
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
+    "fastapi": ("https://fastapi.tiangolo.com/", None),
     "scim2_models": ("https://scim2-models.readthedocs.io/en/latest/", None),
     "scim2_client": ("https://scim2-client.readthedocs.io/en/latest/", None),
     "scim2_tester": ("https://scim2-tester.readthedocs.io/en/latest/", None),
     "scim2_cli": ("https://scim2-cli.readthedocs.io/en/latest/", None),
+    "scim2_server": ("https://scim2-server.readthedocs.io/en/latest/", None),
+    "pydantic": ("https://docs.pydantic.dev/latest/", None),
 }
 
 # -- Sibling projects ------------------------------------------------------
@@ -125,6 +131,28 @@ html_context = {
     "source_docs_path": "/doc/",
 }
 
+# -- Options for doctest -------------------------------------------
+
+doctest_global_setup = """
+from scim2_fastapi import *
+"""
+
 # -- Options for sphinx-issues -------------------------------------
 
 issues_github_path = "python-scim/scim2-fastapi"
+
+# -- Roles ----------------------------------------------------------------
+
+MDN_HEADERS_URL = "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/"
+
+
+def mdn_role(name, rawtext, text, lineno, inliner, options=None, content=None):
+    """Link an HTTP header to its MDN page, and render its name as code."""
+    reference = nodes.reference(
+        rawtext, "", nodes.literal(text, text), refuri=MDN_HEADERS_URL + text
+    )
+    return [reference], []
+
+
+def setup(app):
+    app.add_role("mdn", mdn_role)
