@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "scim2-fastapi"
-version = "0.0.0"
+version = "0.1.0"
 description = "Painless SCIM integration for FastAPI"
 authors = [
     { name = "Éloi Rivard", email = "eloi@yaal.coop" }
