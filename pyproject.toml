@@ -71,7 +71,7 @@ force-single-line = true
 docstring-code-format = true
 
 [tool.coverage.run]
-source = ["scim2_fastapi", "tests"]
+source = ["scim2_fastapi", "examples", "tests"]
 
 [tool.mypy]
 plugins = ["pydantic.mypy"]
@@ -84,6 +84,7 @@ init_typed = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
 
 [tool.uv]
 exclude-newer = "14 days"

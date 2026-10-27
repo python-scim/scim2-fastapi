@@ -39,12 +39,22 @@ class ScimServer:
         storage = MyStorage()
         scim_server = ScimServer(storage, ScimProvider(models=[User]), app=app)
 
+    Or, to build the storage of each request, such as upon its database
+    session::
+
+        def get_storage(session: Annotated[AsyncSession, Depends(get_session)]):
+            return MyStorage(session)
+
+
+        scim_server = ScimServer(get_storage, ScimProvider(models=[User]), app=app)
+
     Or, to include the endpoints in another router::
 
         scim_server = ScimServer(storage, ScimProvider(models=[User]))
         api_router.include_router(scim_server.create_router())
 
-    :param storage: The storage the extension reads and writes resources in.
+    :param storage: The storage the extension reads and writes resources in,
+        or a FastAPI dependency returning the storage of each request.
     :param provider: The service description. It must declare at least one
         resource type.
     :param app: The application to register on right away, if any.
@@ -68,7 +78,7 @@ class ScimServer:
 
     def __init__(
         self,
-        storage: AsyncScimStorage,
+        storage: AsyncScimStorage | Callable[..., AsyncScimStorage],
         provider: ScimProvider,
         app: FastAPI | None = None,
         *,
@@ -84,7 +94,12 @@ class ScimServer:
         self.storage = storage
         self.provider = provider
         self.service = service or self._create_service(secret)
-        self.handler = AsyncScimHandler(self.service, storage)
+        if isinstance(storage, AsyncScimStorage):
+            # The handler refuses a storage lacking a feature the service announces.
+            AsyncScimHandler(self.service, storage)
+            self._get_storage: Callable[..., AsyncScimStorage] = lambda: storage
+        else:
+            self._get_storage = storage
         self.subject = subject
         self.url_prefix = url_prefix.rstrip("/")
         self.name = name
@@ -119,13 +134,13 @@ class ScimServer:
             path = route.pattern.replace("{endpoint}", "{resource_endpoint}")
             router.add_api_route(
                 path,
-                self._make_view(getattr(self.handler, route.operation.value)),
+                self._make_view(route.operation.value),
                 methods=[route.method],
                 name=f"{self.name}.{route.name}",
             )
         router.add_api_route(
             "/{path:path}",
-            self._make_view(self.handler.handle),
+            self._make_view("handle"),
             methods=METHODS,
             name=f"{self.name}.fallback",
             include_in_schema=False,
@@ -153,15 +168,15 @@ class ScimServer:
 
         return ScimRoute
 
-    def _make_view(
-        self, method: Callable[[ScimRequest], Awaitable[ScimResponse]]
-    ) -> Callable[..., Awaitable[Response]]:
+    def _make_view(self, method: str) -> Callable[..., Awaitable[Response]]:
         async def view(
             request: Request,
             subject: Annotated[Any, Depends(self.subject or (lambda: None))],
+            storage: Annotated[AsyncScimStorage, Depends(self._get_storage)],
         ) -> Response:
+            handler = AsyncScimHandler(self.service, storage)
             scim_request = await self.read_request(request, subject)
-            return self._to_response(await method(scim_request))
+            return self._to_response(await getattr(handler, method)(scim_request))
 
         return view
 

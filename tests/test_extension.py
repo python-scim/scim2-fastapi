@@ -36,8 +36,9 @@ def create_provider(config: ServiceProviderConfig | None = None) -> ScimProvider
 
 def create_client(**kwargs) -> TestClient:
     app = FastAPI()
+    kwargs.setdefault("storage", AsyncInMemoryStorage())
     kwargs.setdefault("provider", create_provider())
-    ScimServer(AsyncInMemoryStorage(), app=app, **kwargs)
+    ScimServer(app=app, **kwargs)
     return TestClient(app)
 
 
@@ -312,6 +313,26 @@ def test_subject_is_passed_to_the_service():
     assert response.headers["Location"] == created.headers["Location"]
 
 
+def test_storage_can_be_given_by_a_dependency():
+    storages = {"a": AsyncInMemoryStorage(), "b": AsyncInMemoryStorage()}
+
+    def tenant_storage(request: Request) -> AsyncInMemoryStorage:
+        return storages[request.headers["X-Tenant"]]
+
+    client = create_client(storage=tenant_storage)
+
+    created = client.post(
+        "/scim/v2/Users", json=USER, headers={**SCIM_HEADERS, "X-Tenant": "a"}
+    )
+    assert created.status_code == 201
+    users_of = {
+        tenant: client.get("/scim/v2/Users", headers={"X-Tenant": tenant}).json()
+        for tenant in storages
+    }
+    assert users_of["a"]["totalResults"] == 1
+    assert users_of["b"]["totalResults"] == 0
+
+
 def test_steps_of_the_service_can_be_overridden():
     class PublicService(ScimService):
         def resource_location(self, base_url, resource_type, resource_id):
@@ -359,6 +380,15 @@ def test_cursors_are_sealed_with_the_secret():
 def test_cursors_need_a_secret():
     with pytest.raises(ValueError, match="secret"):
         create_cursor_client(AsyncInMemoryStorage(), None)
+
+
+def test_storage_without_the_announced_cursors_is_refused():
+    class CursorlessStorage(AsyncInMemoryStorage):
+        supports_cursors = False
+
+    config = ServiceProviderConfig(pagination=Pagination(cursor=True, index=True))
+    with pytest.raises(TypeError, match="cursor pagination"):
+        ScimServer(CursorlessStorage(), create_provider(config), secret="secret")
 
 
 def test_given_service_keeps_its_own_secret():

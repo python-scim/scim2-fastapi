@@ -1,11 +1,9 @@
-"""Validate the extension against the official SCIM conformance tester.
+"""Validate the example server against the official SCIM conformance tester.
 
 https://github.com/python-scim/scim2-tester
 """
 
 import pytest
-from fastapi.testclient import TestClient
-from scim2_client.engines.httpx2 import SyncSCIMClient
 from scim2_tester import Status
 from scim2_tester import check_server
 
@@ -24,14 +22,6 @@ SUPPORTED_TAGS = [
     "patch:replace",
     "misc",
 ]
-
-
-@pytest.fixture
-def scim_client(app, scim_server) -> SyncSCIMClient:
-    return SyncSCIMClient(
-        TestClient(app, base_url="http://testserver/scim/v2"),
-        provider=scim_server.provider,
-    )
 
 
 @pytest.mark.parametrize("tag", SUPPORTED_TAGS)
