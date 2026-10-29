@@ -1453,7 +1453,7 @@ dev = [
     { name = "pytest-cov", specifier = ">=7.1.0" },
     { name = "scim2-client", specifier = ">=0.13.2" },
     { name = "scim2-server", extras = ["cursor"], specifier = ">=0.8.3" },
-    { name = "scim2-tester", extras = ["testing"], specifier = ">=0.6.0" },
+    { name = "scim2-tester", extras = ["testing"], specifier = ">=0.6.1" },
     { name = "tox-uv", specifier = ">=1.37.0" },
 ]
 doc = [
@@ -1495,15 +1495,15 @@ cursor = [
 
 [[package]]
 name = "scim2-tester"
-version = "0.6.0"
+version = "0.6.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "scim2-client" },
     { name = "scim2-models" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e1/64/8e46b342655e7cd108f6ae32bc985684c395198aa7bd03614579bd3b6716/scim2_tester-0.6.0.tar.gz", hash = "sha256:06e72d3e70b132c2b48cb48d989ba6c17e5af4fc5b3a59e88a521d9041083dbe", size = 33615, upload-time = "2026-10-29T00:07:07.512Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/78/45/018a542b4aa879eebe87581b09abb945e14e745befda28d1f91b6b4b0c33/scim2_tester-0.6.1.tar.gz", hash = "sha256:9ab6d38f3b264be84a5fa7bb53f4040acc9762028399acba4b93294aaf02250a", size = 34580, upload-time = "2026-10-29T13:30:09.151Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3c/c7/bf4bb239491f243a15f02d75f6d150eea5fbf45c308411c1ce6c2b95d8b3/scim2_tester-0.6.0-py3-none-any.whl", hash = "sha256:95df5ebc0d86d0c3565b40fe1d0ff54ffa161e691157fd931605a39382da56b2", size = 45165, upload-time = "2026-10-29T00:07:06.066Z" },
+    { url = "https://files.pythonhosted.org/packages/2a/33/25b961ccd37a1ab237604f4352fe0568349d6af2256ffc491b0a244873c2/scim2_tester-0.6.1-py3-none-any.whl", hash = "sha256:f915b261a49dba47e486a16f71d8c74c287a3d0257d645b2a08c24463ccf06f0", size = 46091, upload-time = "2026-10-29T13:30:07.949Z" },
 ]
 
 [package.optional-dependencies]
