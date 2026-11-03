@@ -55,8 +55,8 @@ class ScimServer:
         scim_server = ScimServer(storage, ScimProvider(models=[User]))
         api_router.include_router(scim_server.create_router())
 
-    :param storage: The storage the extension reads and writes resources in,
-        or a FastAPI dependency returning the storage of each request.
+    :param storage: The storage that holds the resources, or a FastAPI
+        dependency that returns the storage of each request.
     :param provider: The service description. It must declare at least one
         resource type.
     :param app: The application to register on right away, if any.

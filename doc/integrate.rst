@@ -32,8 +32,8 @@ authentication schemes there before they authenticate. The dependency recognizes
 of its route: ``service_provider_config``, prefixed with the ``name`` of the extension.
 
 The extension serves each request with a :class:`~scim2_server.service.ScimService`, which applies
-the rules of the protocol. What the dependency returns is the *subject* of the request, that the
-extension passes to this service:
+the rules of the protocol. The dependency returns the *subject* of the request, and the extension
+passes it to this service:
 
 .. literalinclude:: ../examples/authentication.py
    :language: python
@@ -76,9 +76,9 @@ announced schemes:
    >>> client.get("/scim/v2/ServiceProviderConfig").status_code
    200
 
-The extension answers with a SCIM error the :class:`~scim2_models.SCIMException`, the
-:class:`~fastapi.HTTPException` and the validation errors raised by any dependency of its routes:
-the ``subject`` dependency, and the dependencies of the routers that include its router. An
+A :class:`~scim2_models.SCIMException`, an :class:`~fastapi.HTTPException` or a validation
+error raised by a dependency of the SCIM routes becomes a SCIM error. This covers the ``subject``
+dependency, and the dependencies of the routers that include the SCIM router. An
 :class:`~fastapi.HTTPException` keeps its headers, such as :mdn:`WWW-Authenticate`. A validation
 error, such as a missing header, gives a 400 ``invalidValue`` error.
 
@@ -117,9 +117,9 @@ request itself, or each operation of a bulk request. A SQL storage opens a savep
 a failed operation of a bulk request does not undo the others.
 
 Commit once per request, in a dependency with ``yield`` that FastAPI runs around every SCIM
-request. The code after ``yield`` runs once the response is ready: the SCIM errors are responses,
-and commit as well, so that the successful operations of a bulk request are kept. An unexpected
-exception reaches the dependency, which rolls back:
+request. The code after ``yield`` runs once the response is ready. A SCIM error is a response too, so
+its request commits as well, and the successful operations of a bulk request are kept. An
+unexpected exception reaches the dependency, which rolls back:
 
 .. literalinclude:: ../examples/transactions.py
    :language: python

@@ -6,8 +6,10 @@ a FastAPI application. It exposes the endpoints of :rfc:`RFC 7644 <7644>` in an
 :class:`~fastapi.APIRouter`, and leaves the protocol to :doc:`scim2-server <scim2_server:index>`
 and the payloads to :doc:`scim2-models <scim2_models:index>`.
 
-It does not keep the resources, nor authenticate the clients: a storage and the FastAPI
-application that includes the extension do.
+scim2-fastapi does not store the resources itself. The application provides an
+:class:`~scim2_server.storage.AsyncScimStorage` that reads and writes them, for example in its
+database. The application also authenticates the clients, with a dependency it passes as the
+``subject`` parameter of :class:`~scim2_fastapi.ScimServer`.
 
 Install scim2-fastapi. It brings FastAPI, scim2-server and scim2-models along:
 
@@ -79,7 +81,8 @@ requests without running a server. Create a user, and read it back at its locati
    >>> client.get(user["meta"]["location"]).json()["userName"]
    'bjensen'
 
-A request the server refuses gets a SCIM error:
+Errors come back as SCIM error responses, not as the ``{"detail": ...}`` responses of
+FastAPI:
 
 .. doctest::
 
